@@ -29,3 +29,37 @@ Things turned sour on the random digits though.  The sample AMillionRandomDigits
 It's pretty clear from this that attempting to encode random data in this way is probably futile.  I'll play around with some more efficient packing of the program before giving up on this one.
 
 And then its... on to the next... great adventure?
+
+Update
+======
+
+I streamlined the compression of the data set.  This broke the uncompressor as I haven't updated it to match the custom compression, but the bad news is that once each program operation becomes a single bit, and we process the original file away until it's the number '1', the size of the program is exactly the same as the size of the original data.
+
+I've just stumbled over a way of transcoding the file into a shadow of itself.  Interesting, but ultimately useless.
+
+array(10) {
+  ["Original File Size"]=>
+  int(415242)
+  ["Raw Program Size"]=>
+  int(3321935)
+  ["Compressed Program Size"]=>
+  int(415242)
+  ["Result Data Size"]=>
+  int(1)
+  ["Result File Size"]=>
+  int(415251)
+  ["Payload Size"]=>
+  int(415243)
+  ["File Container Size"]=>
+  int(8)
+  ["Compression Amount"]=>
+  int(9)
+  ["Compression Ratio"]=>
+  float(2.1674108110451E-5)
+  ["Program Padding"]=>
+  int(1)
+}
+
+And yet, I'm going to keep trying this stuff.
+
+Stay tuned :)

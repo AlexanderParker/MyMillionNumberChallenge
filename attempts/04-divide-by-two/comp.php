@@ -40,14 +40,28 @@ do {
 } while (strlen($program) < $max_length);
 
 // Save some space:
-$program_compressed = gzcompress($program);
+$program_compressed = "";
+
+// Convert program to binary
+$program_padding = 0;
+foreach(str_split($program, 8) as $program_piece) {
+	// So we know what to ignore when decompressing:
+	if (strlen($program_piece) < 8) {
+		$program_padding = 8 - strlen($program_piece);
+		for ($i = 0; $i < $program_padding; $i ++) {
+			$program_piece .= '0';
+		}
+	}
+	$program_compressed .= chr(bindec($program_piece));
+}
+
 $compressed_program_size = strlen($program_compressed);
 
 // Convert the number back into a byte sequence:
 $result_data = gmp_export($number);
 
 // Structure the data:
-$file_contents = $compressed_program_size . '|' . $program_compressed . $result_data;
+$file_contents = $program_padding . $compressed_program_size . '|' . $program_compressed . $result_data;
 
 // Save the file:
 file_put_contents($outfile, $file_contents);
@@ -71,6 +85,7 @@ $metrics = array(
 	'File Container Size' => $file_container_size,
 	'Compression Amount' => $compression_amount,
 	'Compression Ratio' => $compression_ratio,
+	'Program Padding' => $program_padding,
 );
 
 var_dump($metrics);
