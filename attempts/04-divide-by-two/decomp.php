@@ -17,8 +17,6 @@ $delimiter_pos = strpos($data, '|');
 $program_size = substr($data, 0, $delimiter_pos);
 $program = gzuncompress(substr($data, $delimiter_pos + 1, $program_size));
 $program_reversed = str_split(strrev($program));
-var_dump($delimiter_pos + $program_size + 1);
-var_dump(substr($data, $delimiter_pos + $program_size + 1));
 $number = gmp_import(substr($data, $delimiter_pos + $program_size + 1) ?: 0);
 
 foreach($program_reversed as $instruction) {
