@@ -1,9 +1,10 @@
 <?php
 
 // Read the raw bytes.
-//$data = unpack('C*', file_get_contents('../../assets/lorem.txt'));
-$data = unpack('C*', file_get_contents('../../assets/AMillionRandomDigits.bin'));
-//$data = unpack('C*', file_get_contents('../../assets/RandomNumbers'));
+$data = unpack('C*', file_get_contents('AMillionRandomDigits.bin'));
+
+// Metadata to store the iterations.
+$meta = array();
 
 global $compressed;
 global $iteration;
@@ -24,7 +25,7 @@ function randomize($data, $seed) {
 	global $data_size;
 	global $start_seed;
 	$packed_data = processIteration($data, $seed);
-	$last_compressed = gzcompress($packed_data, 9, ZLIB_ENCODING_RAW);
+	$last_compressed = gzencode($packed_data, 9);
 	$compressed_size = strlen($last_compressed);
 	$is_compressed = $compressed_size < $data_size;
 	// Keep track of progress:
@@ -57,23 +58,17 @@ function processIteration($data, $seed) {
 	return call_user_func_array("pack", array_merge(array("C*"), $new_data));
 }
 
+
 while ($is_compressed == false) {
   $seed = mt_rand();
   $data = randomize($data, $seed);
 }
 
-// Win! (well, if whatever metadata we need is also smaller than the original file)
 file_put_contents('compressed.bin', $last_compressed);
 
-$output[] = "Original Size: {$data_size} bytes.";
+$output[] = "Original Size: " . count($data) . " bytes.";
 
-$output[] = "Compressed Size: " . strlen($last_compressed) . " bytes.";
-
-$output[] = "Starting Seed {$start_seed}";
-
-$output[] = "Iterations: {$iteration}";
-
-$output[] = "Finished. You win.";
+$output[] = "Finished.";
 
 foreach ($output as $count => $text) {
   echo "{$count}: {$text}\n";
