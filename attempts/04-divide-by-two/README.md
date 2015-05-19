@@ -1,5 +1,5 @@
-Million Number Challenge Attempt 4 - IN PROGRESS
-================================================
+Million Number Challenge Attempt 4 - FAILED
+===========================================
 
 Every number is one digit away from being divisible by 2.
 
@@ -35,8 +35,9 @@ Update
 
 I streamlined the compression of the data set.  This broke the uncompressor as I haven't updated it to match the custom compression, but the bad news is that once each program operation becomes a single bit, and we process the original file away until it's the number '1', the size of the program is exactly the same as the size of the original data.
 
-I've just stumbled over a way of transcoding the file into a shadow of itself.  Interesting, but ultimately useless.
+I've just stumbled over a way of transcoding the file into a shadow of itself. Interesting, but ultimately useless.  Is it worth bothering to try processing this side-channel data?
 
+```
 array(10) {
   ["Original File Size"]=>
   int(415242)
@@ -59,7 +60,7 @@ array(10) {
   ["Program Padding"]=>
   int(1)
 }
-
-And yet, I'm going to keep trying this stuff.
+```
+I'm going to keep trying this stuff.
 
 Stay tuned :)
