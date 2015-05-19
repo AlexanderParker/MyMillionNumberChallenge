@@ -1,6 +1,6 @@
 <?php
 
-$data = file_get_contents('../../assets/AMillionRandomDigits.bin');
+$data = "\xff" . file_get_contents('../../assets/AMillionRandomDigits.bin');
 
 $size = strlen($data);
 $chunksize = 1;
