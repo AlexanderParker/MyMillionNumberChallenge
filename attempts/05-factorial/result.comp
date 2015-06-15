@@ -1,0 +1,15 @@
+array (
+  'max_count' => 0,
+  'program' => 
+  array (
+    14 => 12,
+    13 => 8,
+    11 => 2,
+    10 => 1,
+    9 => 7,
+    8 => 4,
+  ),
+  'remainder' => 
+  GMP::__set_state(array(
+  )),
+)
