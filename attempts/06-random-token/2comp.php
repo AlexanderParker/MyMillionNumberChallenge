@@ -4,12 +4,16 @@ global $tokensize, $data_length, $token_limit, $min_length, $last_maxlength;
 
 $tokensize = 1; // Bytes
 
+// Bigger is slower, but might catch larger repeated patterns
+$max_replace_string_length = 4;
+
 //$infile = '../../assets/81055__inplano__forest-birds-and-mosquitoes.wav';
 //$outfile = '81055__inplano__forest-birds-and-mosquitoes.wav.out';
 // $infile = '../../assets/herron.jpg';
 // $outfile = 'herron.out';
-$infile = '../../assets/AMillionRandomDigits.bin';
+//$infile = '../../assets/herron.jpg';
 //$infile = '../../assets/lorem.txt';
+$infile = '../../assets/AMillionRandomDigits.bin';
 $outfile = 'random.out';
 
 $data = file_get_contents($infile);
@@ -28,7 +32,7 @@ $match = false;
 
 $max_iterations = 255;
 
-$last_maxlength = floor(strlen($data) / 2);
+$last_maxlength = min(floor(strlen($data) / 2), $max_replace_string_length);
 
 // Find unused byte sequences
 
@@ -41,7 +45,7 @@ function get_unique_token($token_data) {
 		foreach($chars as $charcode) {
 			$token .= chr($charcode);
 		}
-		if (($pos = strpos($token_data, $token)) === false) {
+		if (substr_count($token_data, $token) > 0) {
 			return array(
 				'token_int' => $token_int,
 				'token_str' => $token,
@@ -95,8 +99,9 @@ function find_repeating_sequence($data) {
 			}
 		}
 		if ($lengthmatches > 0) {
+			$last_maxlength = $length - 1;
 			$matched_size = $length * $lengthmatches;
-			$replace_size = $length + $tokensize * count($sequences["$length"]);
+			$replace_size = count($sequences["$length"]) * $length + $tokensize * count($sequences["$length"]);
 			echo "$lengthmatches matches: original size $matched_size, new size $replace_size : ";
 			if ($replace_size < $matched_size) {
 				echo "Replacing\n";
@@ -112,7 +117,7 @@ function find_repeating_sequence($data) {
 echo "Sifting sequences\n";
 
 // To build dictionary:
-// [iterations(1byte)]{[iteration 1 token count(1byte)][token(2byte)][data(nBytes)][token2...]}{[iteration 2...]]
+// [pagecount(1byte)]{[page 1 size][page 1 token count(1byte)][data(nBytes)][token1(2byte)][token2...]}  {[page 2...]]}
 // Size of entry (bytes) = 2 + datalength
 // Only store entry if size of entry < count(matches) * datalength
 // Size of dictionary (bytes) = 1 + (total entries size)
@@ -130,7 +135,7 @@ $iterations = 0;
 
 $keep_going = true;
 $last_sequence = array();
-while ($keep_going) {	
+while ($keep_going) {
 	$sequences = find_repeating_sequence($output_data);
 	// Make sure we don't get caught in a loop forever.
 	$different = var_export($last_sequence, true) !== var_export($sequences, true);
@@ -138,37 +143,46 @@ while ($keep_going) {
 		echo "No more sequences found\n";
 		break;
 	}
-	$last_sequence = $sequences;
-	foreach ($sequences as $size_page => $matches) {
+	$last_sequence = $sequences;	
+	foreach ($sequences as $size_page => $matches) {		
 		$page_matches = 0;
 		$page_dictionary = '';
 		$page_output_data = $output_data;
 		$original_page_size = strlen($page_output_data);
 		// Add each match sequence to the page
-		foreach ($matches as $match => $count) {
+		foreach ($matches as $match => $count) {			
 			if ($iterations >= $max_iterations) break 3;
 			if ($page_matches >= 255) {
 				break; // Hard limit for now.
 			}
-			$token = get_unique_token($page_output_data);					
+			$token = get_unique_token($page_output_data);
+			if (!$token) {
+				echo "Out of tokens: $page_matches\n";
+				continue;
+			}			
 			$new_entry = $token['token_str'] . $match;
-			$l1 = strlen($page_output_data);
 			$temp_output_data = str_replace($match, $token['token_str'], $page_output_data);
+			$restored_output_data = str_replace($token['token_str'], $match, $temp_output_data);
+			if (!strcmp($temp_output_data, $restored_output_data)) {
+				echo "Token not restoreable, skipping.\n";
+				continue;
+			}			
 			if (strlen($new_entry . $temp_output_data) < strlen($page_output_data)) {
 				$page_matches ++;
-				$iterations ++;
 				$page_output_data = $temp_output_data;
-			 	$page_dictionary .= $new_entry;				
+			 	$page_dictionary .= $new_entry;
 			}
 		}		
-		if ($page_matches > 0) {
-			$page_dictionary = pack('C', $size_page) . pack('C', $page_matches) . $page_dictionary;				
+		if ($page_matches > 0) {			
+			$page_dictionary = pack('C', $size_page) . pack('C', $page_matches) . $page_dictionary;
+			//$page_dictionary = pack('C', $page_matches) . $page_dictionary;
 			$overhead = strlen($page_dictionary);
 			$new_page_size = strlen($page_output_data);
 			// Only add the page if it actually is smaller
 			if ($new_page_size + $overhead < $original_page_size) {
 			 	$number_of_sizes ++;
-				$output_data = $page_dictionary . $page_output_data;
+				$output_data = $page_output_data;
+				$dictionary .= $page_dictionary;
 			 	echo "Added page length $size_page\n";
 			}
 			else {
@@ -180,11 +194,14 @@ while ($keep_going) {
 		}
 		break;
 	}
+	//break;
 	$iterations ++;
 }
 
 // Add the starting size to the dictionary
 echo "Preparing compressed data\n";
+var_dump($iterations);
+//$compressed_data = $dictionary . $output_data;
 $compressed_data = pack('C', $iterations) . $dictionary . $output_data;
 $new_size = strlen($compressed_data);
 
