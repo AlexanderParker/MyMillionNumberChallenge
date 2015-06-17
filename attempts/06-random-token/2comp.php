@@ -1,22 +1,22 @@
 <?php
 
-global $tokensize, $data_length, $token_limit, $min_length;
+global $tokensize, $data_length, $token_limit, $min_length, $last_maxlength;
 
-$tokensize = 2; // Bytes
+$tokensize = 1; // Bytes
 
-$infile = '../../assets/81055__inplano__forest-birds-and-mosquitoes.wav';
-$outfile = '81055__inplano__forest-birds-and-mosquitoes.wav.out';
+//$infile = '../../assets/81055__inplano__forest-birds-and-mosquitoes.wav';
+//$outfile = '81055__inplano__forest-birds-and-mosquitoes.wav.out';
 // $infile = '../../assets/herron.jpg';
 // $outfile = 'herron.out';
+$infile = '../../assets/AMillionRandomDigits.bin';
 //$infile = '../../assets/lorem.txt';
-//$infile = '../../assets/lorem.txt';
-//$outfile = 'lorem.out';
+$outfile = 'random.out';
 
 $data = file_get_contents($infile);
 
 $data_length = strlen($data);
 
-$token_bits = 16;
+$token_bits = 8 * $tokensize;
 
 $token_limit = pow (2, $token_bits); // Decimal;
 
@@ -27,6 +27,8 @@ $min_length = $tokensize + 1;
 $match = false;
 
 $max_iterations = 255;
+
+$last_maxlength = floor(strlen($data) / 2);
 
 // Find unused byte sequences
 
@@ -39,11 +41,11 @@ function get_unique_token($token_data) {
 		foreach($chars as $charcode) {
 			$token .= chr($charcode);
 		}
-		if (($pos = strpos($token_int, $token)) === false) {
+		if (($pos = strpos($token_data, $token)) === false) {
 			return array(
 				'token_int' => $token_int,
 				'token_str' => $token,
-			);
+			);			
 		}
 	}
 	return false;
@@ -51,16 +53,15 @@ function get_unique_token($token_data) {
 
 // Find repeating sequence
 function find_repeating_sequence($data) {
-	global $tokensize, $min_length;
+	global $tokensize, $min_length, $last_maxlength;
 	$data_length = strlen($data);
 
-	echo "Finding repeating sequences:\n";	
-	$max_length = $data_length / 2;
-	$length = $min_length;
+	echo "Finding repeating sequences:\n";
 	$sequences = array();
+	$blacklist = array();
 	// Create a sliding window from the biggest size down:
-	for ($length = $min_length; $length < $max_length; $length ++) {
-		echo "Match length: $length: ";
+	for ($length = $last_maxlength; $length > 2; $length --) {
+		echo "Search length: $length\n";
 		$max_offset = $data_length - $length;
 		$offset = 0;
 		$lengthmatches = 0;
@@ -68,6 +69,14 @@ function find_repeating_sequence($data) {
 			$comparison_token = substr($data, $offset, $length);
 			$comparison_data = substr($data, $offset + $length);
 			if (($count = substr_count($comparison_data, $comparison_token)) > 1)	{
+				// Make sure range not in blacklist:
+				for ($blacklist_index = $offset; $blacklist_index < $offset + $length; $blacklist_index ++) {
+					if (isset($blacklist[$blacklist_index])) {
+						// Set new offset:
+						$offset ++;
+						continue;
+					}
+				}
 				if (!isset($sequences["$length"])) {
 					$sequences["$length"] = array();
 				}
@@ -75,22 +84,26 @@ function find_repeating_sequence($data) {
 					$sequences["$length"][$comparison_token] = 0;
 				}
 				$sequences["$length"][$comparison_token] += $count;
-				$lengthmatches += $count;				
+				$lengthmatches += $count;
+				for ($blacklist_index = $offset; $blacklist_index < $offset + $length; $blacklist_index ++) {
+					$blacklist[$blacklist_index] = true;
+				}
 				$offset += $length;
 			}
 			else {
 				$offset ++;
 			}
 		}
-		if ($lengthmatches == 0) {
-			echo "No more matches\n";
-			if (count($sequences) == 0) {
-				return false;
+		if ($lengthmatches > 0) {
+			$matched_size = $length * $lengthmatches;
+			$replace_size = $length + $tokensize * count($sequences["$length"]);
+			echo "$lengthmatches matches: original size $matched_size, new size $replace_size : ";
+			if ($replace_size < $matched_size) {
+				echo "Replacing\n";
+				return $sequences;
 			}
-			break;
-		}
-		else {
-			echo "$lengthmatches matches\n";
+			echo "Skipped\n";
+			
 		}
 	}
 	return $sequences;
@@ -141,7 +154,6 @@ while ($keep_going) {
 			$new_entry = $token['token_str'] . $match;
 			$l1 = strlen($page_output_data);
 			$temp_output_data = str_replace($match, $token['token_str'], $page_output_data);
-			var_dump ($l1 - strlen($temp_output_data));
 			if (strlen($new_entry . $temp_output_data) < strlen($page_output_data)) {
 				$page_matches ++;
 				$iterations ++;

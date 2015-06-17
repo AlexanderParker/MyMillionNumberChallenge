@@ -90,5 +90,3 @@ foreach ($pagefile as $segment => $pages) {
 }
 
 var_dump($pagefile);
-
-die;
