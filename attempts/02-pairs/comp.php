@@ -69,6 +69,8 @@ foreach ($data as $index => $value) {
 //																			1			1			1
 //																														0.5
 //	
+var_dump($pagefile);
+die;
 foreach ($pagefile as $segment => $pages) {
 	foreach ($pages as $page => $indices) {
 		foreach ($indices as $index => $value) {

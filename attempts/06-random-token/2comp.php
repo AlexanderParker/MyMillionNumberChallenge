@@ -2,7 +2,7 @@
 
 global $tokensize, $data_length, $token_limit, $min_length, $last_maxlength;
 
-$tokensize = 1; // Bytes
+$tokensize = 2; // Bytes
 
 // Bigger is slower, but might catch larger repeated patterns
 $max_replace_string_length = 4;
@@ -13,7 +13,7 @@ $max_replace_string_length = 4;
 // $outfile = 'herron.out';
 //$infile = '../../assets/herron.jpg';
 //$infile = '../../assets/lorem.txt';
-$infile = '../../assets/AMillionRandomDigits.bin';
+$infile = '../12-entropy2/random.out';
 $outfile = 'random.out';
 
 $data = file_get_contents($infile);
