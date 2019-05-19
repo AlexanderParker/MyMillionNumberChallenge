@@ -18,41 +18,23 @@ hare-brained compression algorithm...
 
 I'll be back.
 
-Update 19/06/2015
+Update 20/05/2019
 =================
 
-Just some quick thoughts on my efforts so far.
+I know this is a fool's errand, but I persist. Tackling the impossible feels like a mantra than a scientific exercise.
 
-Mathematics for me has always been a kind of abstract concept - wishy-washy,
-numbery-wumbery kind of... stuff.  Part of my motivation jumping into this was
-to learn, and learn I have.
+In the current iteration, I'm brute forcing an algorithm that incrementally reduces entropy of the source data. It's not even reducing the size of the data! But with each iteration, the randomness decreases.
 
-Certainly I've come at this problem from a number of angles.  As I continue I
-begin to appreciate just how _physical_ numbers really are.
+I'm running this in a virtual machine whenever I have spare processing time. The algorithm is as follows:
 
-Talking to colleagues about the problem, a common pattern is for "common sense"
-to prevail, "surely it's simple as" (rings a few bells as to my previous sense
-of denial).
+ - Set the random seed to 0
+ - Generate random bytes matching the filesize of the source data
+ - XOR the source data with the random mask
+ - If the Shannon entropy is lower, record the seed and replace the working data with the new, lower-entropy version.
+ - Repeat until a certain threshold is reached.
 
-Concepts like representing the data in terms of what it's "not" or finding 
-some kind of nested index or tree representation. I encourage them to consider
-the branches of that tree are themselves information, the format of the index -
-indeed the size of the offsets probably larger than the indexed information.
+I'm sure this is just a fancier way of pushing the complexity of the data into a different corner as always.
 
-Any way you could skew each digit into another form requires a map to get back,
-and when your data is completely random, the map ends up being just another
-way of looking at the same data.
+We'll see if I eventually shave the entropy by 1/1000th - and if the size of the dictionary of seeds needed to reverse the process is lower.
 
-Granted I've had some successes on various files, text files and some image
-formats are somewhat compressible using the mathematical or token-based tricks
-I've tried to-date. However on the random data my most successful attempts 
-either increase the filesize, or the result is exactly the same size to the bit.
-
-My other attempts have been miserable failures.
-
-I'm a stubborn bastard, and now my co-workers have a side bet going on my
-chances of success.  They put the odds at 1-1000...
-
-I'd say they're more 1-infinity.
-
-Yet I persevere.  A guy's gotta have a hobby I guess!
+But it's fun to play with data in different ways.
