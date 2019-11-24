@@ -38,3 +38,10 @@ I'm sure this is just a fancier way of pushing the complexity of the data into a
 We'll see if I eventually shave the entropy by 1/1000th - and if the size of the dictionary of seeds needed to reverse the process is lower.
 
 But it's fun to play with data in different ways.
+
+Another slight observation
+==========================
+
+ If this approach is taken to low-entropy data (like lorem text) - the algorithm is worse. So as entropy reduces, randomising the base data set is less useful.
+
+ Basing the chance of randomising a character on the current entropy level might yield results...

@@ -1,0 +1,5 @@
+#/bin/bash
+
+seq 09990 10015 | parallel php -S localhost:{} thread.php 
+
+php comp.php

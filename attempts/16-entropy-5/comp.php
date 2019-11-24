@@ -6,6 +6,9 @@ $outfile = 'random.out';
 $originalData = file_get_contents($infile);
 $outputData = $originalData;
 
+$seeds = file_get_contents("seeds");
+if (strlen($seeds) > 0) $seeds = json_decode($seeds);
+
 $seed = 0;
 $pass = 0;
 $passes = array();
@@ -42,15 +45,22 @@ echo "Calculating Pass: $pass\n";
 while ($startEntropy - $bestEntropy < $targetImprovement) {
   $bestPassFound = false;
   // Find the best seed
+  if (sizeof($seeds) > 0) {
+    $seed = array_shift($seeds)[0];
+    var_dump($seed);
+  }
   mt_srand($seed, MT_RAND_MT19937);
-  $seed ++;
   $testData = $outputData;
   $xorString = "";
   // Generate xor character mask
   for ($charIndex = 0; $charIndex < strlen($testData); $charIndex ++) {
-    $xorString .= chr(mt_rand(0, 255));
+    $nextChar = mt_rand(0, 255);
+    // mask randomly based on current entropy - chance to mask reduces as entropy reduces
+ 
+    if ($nextChar / 255 < $bestEntropy )   {
+      $testData[$charIndex] = $testData[$charIndex] ^ chr($nextChar);
+    }
   }
-  $testData = $testData ^ $xorString;
   $testEntropy = get_shannon_entropy($testData);
   if ($testEntropy < $bestEntropy) {
     $passes[] = array($seed, $bestEntropy);
@@ -58,14 +68,15 @@ while ($startEntropy - $bestEntropy < $targetImprovement) {
     $bestEntropy = $testEntropy;
     echo "\nEntropy reduction: " . ($startEntropy - $bestEntropy) . " (seed $seed))\n";
     $pass ++;
-    $seed = 0;
+    //$seed = floor($seed / 2);
     echo "Calculating Pass: $pass\n";
   } else {
     echo ".";
   }
+  $seed ++;
+  file_put_contents($outfile, $outputData);
+  file_put_contents("seeds", json_encode($passes));
 }
 
 echo "Finished. Total entropy reduction: " . ($startEntropy - $bestEntropy) . "\n";
 
-file_put_contents($outfile, $outputData);
-file_put_contents("seeds", json_encode($passes));
