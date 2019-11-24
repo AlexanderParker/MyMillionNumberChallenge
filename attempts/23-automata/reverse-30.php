@@ -1,5 +1,7 @@
 <?php
 
+// Inspiration: https://www.mathpages.com/home/kmath439/kmath439.htm
+
 // Put your rule 30 row here. You can also just jam random bits. Yeah this is a character array, just pretend the 1's and 0's are binary ok? This isn't optimised.
 
 $data = "11011110110011100010110000110011100000011000010101100100011000010000000101111100111001001110111";
